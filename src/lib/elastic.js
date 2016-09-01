@@ -1,5 +1,6 @@
 const EventEmitter = require('events')
 const elasticsearch = require('elasticsearch')
+const ELASTIC = require('../helpers').logging.ELASTIC
 
 class Elastic extends EventEmitter {
   constructor(host) {

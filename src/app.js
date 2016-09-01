@@ -1,12 +1,8 @@
-const colors = require('colors') // eslint-disable-line
-
 const config = require('../config')
 const handlers = require('./handlers')
 const SlackClient = require('./lib/slack')
 const ElasticClient = require('./lib/elastic')
-
-const ELASTIC = `${'['.grey}${'Elastic'.red}${']'.grey}`
-const SLACK = `${'['.grey}${'Slack'.cyan}${']'.grey}`
+const { SLACK, ELASTIC } = require('./helpers').logging
 
 const Elastic = new ElasticClient(config.host)
 const Slack = new SlackClient(config.token, SLACK)
