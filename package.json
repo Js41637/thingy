@@ -1,0 +1,19 @@
+{
+  "name": "thingy",
+  "version": "1.0.0",
+  "description": "Does shit",
+  "main": "index.js",
+  "scripts": {},
+  "author": "Js41637",
+  "license": "Beerware",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "dependencies": {
+    "@slack/client": "^3.5.4",
+    "colors": "^1.1.2",
+    "elasticsearch": "^11.0.1",
+  },
+  "devDependencies": {}
+}
