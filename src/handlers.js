@@ -1,6 +1,3 @@
-const colors = require('colors') // eslint-disable-line
-const ELASTIC = `${'['.grey}${'Elastic'.red}${']'.grey}`
-
 const message = (message, Elastic) => {
   if (!message.subtype) message.subtype = 'message_normal'
   switch (message.subtype) {
@@ -22,7 +19,7 @@ const _handleNormalMessage = (message, Elastic) => {
     type: 'message',
     id: body.ts,
     body
-  }, (err, resp) => _handleResp('Create', err, resp))
+  })
 }
 
 const _handleMessageChange = (message, Elastic) => {
@@ -49,13 +46,8 @@ const _handleMessageChange = (message, Elastic) => {
       body: {
         doc: msg
       }
-    }, (err, resp) => _handleResp('Update', err, resp))
+    })
   }, 1000)
-}
-
-const _handleResp = (type, err) => {
-  if (err) console.error(ELASTIC, type, "Error", err)
-  else console.log(ELASTIC, type, "Success")
 }
 
 exports.messageHandler = message
