@@ -9,7 +9,7 @@ const Slack = new SlackClient(config.token, SLACK)
 
 Slack.on('newMessage', function(message) {
   console.log(SLACK, 'Received Message', message)
-  handlers.messageHandler(message, Elastic._client)
+  handlers.messageHandler(message, Elastic.methods)
 })
 
 Elastic.on('connected', () => {
