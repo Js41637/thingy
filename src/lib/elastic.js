@@ -28,28 +28,41 @@ class Elastic extends EventEmitter {
     })
   }
 
-  create(what) {
-    client.create(what, err => {
+  create(what, cb) {
+    client.update(Object.assign({}, what, { "doc_as_upsert": true }), (err, resp) => {
       if (err) console.error(ELASTIC, "Error creating document", err)
       else console.log(ELASTIC, "Successfully created document")
+      if (cb && typeof cb == 'function') cb(err, resp)
     })
   }
 
-  update(what) {
-    client.update(what, err => {
+  update(what, cb) {
+    client.update(what, (err, resp) => {
       if (err) console.error(ELASTIC, "Error updating document", err)
       else console.log(ELASTIC, "Successfully updated document")
+      if (cb && typeof cb == 'function') cb(err, resp)
     })
   }
 
   search(what, cb) {
     client.search(what, (err, resp) => {
-      cb(err, resp)
+      if (err) console.error(ELASTIC, "Error updating document", err)
+      else console.log(ELASTIC, "Successfully updated document")
+      if (cb && typeof cb == 'function') cb(err, resp)
+    })
+  }
+
+  bulk(what, cb) {
+    client.bulk(what, (err, resp) => {
+      if (err) console.error(ELASTIC, "Error bulking", err)
+      else console.log(ELASTIC, "Successfully bulked stuff")
+      if (cb && typeof cb == 'function') cb(err, resp)
     })
   }
 
   get methods() {
-    return { create: this.create, update: this.update, search: this.search }
+    let { create, update, search, bulk } = this
+    return { create, update, search, bulk }
   }
 }
 

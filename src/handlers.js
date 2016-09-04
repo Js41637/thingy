@@ -1,3 +1,5 @@
+const _ = require('lodash')
+
 const message = (message, Elastic) => {
   if (!message.subtype) message.subtype = 'message_normal'
   switch (message.subtype) {
@@ -11,25 +13,29 @@ const message = (message, Elastic) => {
 }
 
 const _handleNormalMessage = (message, Elastic) => {
-  let body = message
-
   // Delete this crap
-  delete body.team
-  delete body.type
-  delete body.subtype
-  delete body.reply_to
+  delete message.team
+  delete message.type
+  delete message.subtype
+  delete message.reply_to
+  message.edits = []
 
   Elastic.create({
     index: 'messages',
     type: 'message',
-    id: body.ts,
-    body
+    id: message.ts,
+    body: {
+      doc: message
+    }
   })
 }
 
 const _handleMessageChange = (message, Elastic) => {
   setTimeout(() => {
+    const ts = message.message.ts
+    const editedts = _.get(message, 'message.edited.ts')
     let msg = message.message
+    let previous = message.previous_message
 
     // Delete things we know won't change and other crap
     delete msg.type
@@ -37,23 +43,46 @@ const _handleMessageChange = (message, Elastic) => {
     delete msg.user
     delete msg.subtype
     delete msg.reply_to
+    delete msg.edited
 
-    // If it's an edited message, store the original message and put it into array
-    if (msg.edited) {
-      delete msg.edited.user // Don't need dis
-      msg.edits = [msg.edited]
-      delete msg.edited // No longer needed
-      if (message.previous_message) msg.edits[0].original = message.previous_message.text
+    if (previous && previous.text != msg.text) {
+      Elastic.bulk({
+        body: [{
+          update: {
+            _index: 'messages',
+            _type: 'message',
+            _id: ts
+          }
+        }, {
+          script: {
+            file: 'add_edit_array',
+            params: {
+              edit: {
+                ts: editedts,
+                text: previous.text
+              }
+            }
+          }
+        }, {
+          update: {
+            _index: 'messages',
+            _type: 'message',
+            _id: ts
+          }
+        }, {
+          doc: msg
+        }]
+      })
+    } else {
+      Elastic.update({
+        index: 'messages',
+        type: 'message',
+        id: ts,
+        body: {
+          doc: msg
+        }
+      })
     }
-
-    Elastic.update({
-      index: 'messages',
-      type: 'message',
-      id: message.message.ts,
-      body: {
-        doc: msg
-      }
-    })
   }, 1000)
 }
 
