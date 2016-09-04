@@ -1,3 +1,4 @@
+const readline = require('readline')
 const config = require('../config')
 const handlers = require('./handlers')
 const SlackClient = require('./lib/slack')
@@ -14,8 +15,6 @@ Slack.on('newMessage', function(message) {
 
 Elastic.on('connected', () => {
   console.log(ELASTIC, 'Connected to Elastic Server')
-
-  //console.log(Elastic.create())
 })
 
 Slack.on('connected', ({ self, team }) => {
@@ -30,7 +29,21 @@ Elastic.on('disconnect', () => {
 
 Slack.on('disconnect', () => {
   console.error(SLACK, 'Disconnected from Slack, restarting instance')
-  setTimeout(function() {
+  setTimeout(() => {
     process.exit(1)
   }, 1500)
+})
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+})
+
+rl.on('line', (input) => {
+  Elastic.search({
+    index: 'messages',
+    q: input
+  }, (err, resp) => {
+    console.log(err, "Hits", resp.hits.total, resp.hits.hits)
+  })
 })

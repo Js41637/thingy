@@ -12,8 +12,13 @@ const message = (message, Elastic) => {
 
 const _handleNormalMessage = (message, Elastic) => {
   let body = message
+
+  // Delete this crap
   delete body.team
   delete body.type
+  delete body.subtype
+  delete body.reply_to
+
   Elastic.create({
     index: 'messages',
     type: 'message',
@@ -26,10 +31,12 @@ const _handleMessageChange = (message, Elastic) => {
   setTimeout(() => {
     let msg = message.message
 
-    // Delete things we know won't change
+    // Delete things we know won't change and other crap
     delete msg.type
     delete msg.channel
     delete msg.user
+    delete msg.subtype
+    delete msg.reply_to
 
     // If it's an edited message, store the original message and put it into array
     if (msg.edited) {

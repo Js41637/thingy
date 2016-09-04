@@ -42,8 +42,10 @@ class Elastic extends EventEmitter {
     })
   }
 
-  search(what) {
-    console.log(what)
+  search(what, cb) {
+    client.search(what, (err, resp) => {
+      cb(err, resp)
+    })
   }
 
   get methods() {
