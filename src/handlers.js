@@ -20,6 +20,7 @@ const _handleNormalMessage = (message, Elastic) => {
   delete message.reply_to
   message.edits = []
 
+  // Creates a new message document
   Elastic.create({
     index: 'messages',
     type: 'message',
@@ -30,10 +31,12 @@ const _handleNormalMessage = (message, Elastic) => {
   })
 }
 
+// Handles the mammoth message_changed event
 const _handleMessageChange = (message, Elastic) => {
   setTimeout(() => {
     const ts = message.message.ts
     const editedts = _.get(message, 'message.edited.ts')
+
     let msg = message.message
     let previous = message.previous_message
 
@@ -45,7 +48,15 @@ const _handleMessageChange = (message, Elastic) => {
     delete msg.reply_to
     delete msg.edited
 
+    /**
+     * If we have a previous message and the current message text is not the same as the previous
+     * This is required because certain actions like posting an image link send 2 events, the initial
+     *  message and the message_changed event adding the actual picture attachment to the message.
+     * If the message texts are the same we can assume this is not actually an edit but an attachment being added
+     */
     if (previous && previous.text != msg.text) {
+      // Store when the message was edited last
+      msg.edited = editedts
       Elastic.bulk({
         body: [{
           update: {
@@ -54,11 +65,16 @@ const _handleMessageChange = (message, Elastic) => {
             _id: ts
           }
         }, {
+          /**
+           * Script that adds an edit to the edits array on the message. Two requests are required for this.
+           * First we update the edits array adding the original message text
+           * Then we update the rest of the message with the new text or possibily attachments
+           */
           script: {
-            file: 'add_edit_array',
+            file: 'add_edit_array', // ./scripts/add_edit_array.groovy
             params: {
               edit: {
-                ts: editedts,
+                ts: previous.ts,
                 text: previous.text
               }
             }
@@ -74,6 +90,7 @@ const _handleMessageChange = (message, Elastic) => {
         }]
       })
     } else {
+      // Simply edits the original message adding the new attachment (also overwrites other data if changed (it shouldn't))
       Elastic.update({
         index: 'messages',
         type: 'message',

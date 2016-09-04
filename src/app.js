@@ -34,11 +34,13 @@ Slack.on('disconnect', () => {
   }, 1500)
 })
 
+// Let us type things into the console
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 })
 
+// Search for whatever we input in the ElasticDB and log it for testing
 rl.on('line', (input) => {
   Elastic.search({
     index: 'messages',
